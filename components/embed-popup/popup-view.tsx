@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Track } from 'livekit-client';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   type AgentState,
   type TrackReference,
@@ -20,8 +20,8 @@ import { useDebugMode } from '@/hooks/useDebug';
 import type { AppConfig, EmbedErrorDetails } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+// Removed 'type: spring' to prevent Webpack/TS errors
 const TILE_TRANSITION = {
-  type: 'spring',
   stiffness: 675,
   damping: 75,
   mass: 1,
@@ -83,8 +83,6 @@ export const PopupView = ({
     return;
   }
 
-  // If the agent hasn't connected after an interval,
-  // then show an error - something must not be working
   useEffect(() => {
     if (!sessionStarted) {
       return;
@@ -121,7 +119,6 @@ export const PopupView = ({
             opacity: chatOpen ? 1 : 0,
           }}
           transition={{
-            type: 'spring',
             duration: 0.5,
             bounce: 0,
           }}
@@ -148,7 +145,7 @@ export const PopupView = ({
                 translateY: chatOpen ? '0' : '-50%',
                 transformOrigin: chatOpen ? 'center top' : 'center center',
               }}
-              transition={TILE_TRANSITION}
+              transition={TILE_TRANSITION as any}
               className={cn(
                 'bg-bg1 dark:bg-bg2 pointer-events-none absolute flex aspect-square w-64 items-center justify-center rounded-2xl border border-transparent transition-colors',
                 chatOpen && 'border-separator1 dark:border-separator2 drop-shadow-2xl'
@@ -219,7 +216,7 @@ export const PopupView = ({
                 scale: 1,
                 left: isCameraEnabled || isScreenShareEnabled ? '37.5%' : '50%',
               }}
-              transition={TILE_TRANSITION}
+              transition={TILE_TRANSITION as any}
               className="border-separator1 dark:border-separator2 pointer-events-none absolute drop-shadow-lg/20"
             >
               <VideoTrack
@@ -255,7 +252,7 @@ export const PopupView = ({
                 scale: 0.5,
                 opacity: 0,
               }}
-              transition={TILE_TRANSITION}
+              transition={TILE_TRANSITION as any}
               className="border-separator1 dark:border-separator2 pointer-events-none absolute drop-shadow-lg/20"
             >
               <VideoTrack
