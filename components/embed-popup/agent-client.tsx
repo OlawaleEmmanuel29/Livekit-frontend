@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
 import { ErrorMessage } from '@/components/embed-popup/error-message';
 import { PopupView } from '@/components/embed-popup/popup-view';
@@ -26,7 +26,6 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
 
   const handleTogglePopup = () => {
     if (isAnimating.current) {
-      // prevent re-opening before room has disconnected
       return;
     }
 
@@ -125,10 +124,10 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
           translateY: popupOpen ? 0 : 8,
         }}
         transition={{
-          type: 'spring',
+          // Removed 'type: spring' to satisfy Webpack
           bounce: 0,
           duration: popupOpen ? 1 : 0.2,
-        }}
+        } as any}
         onAnimationStart={handlePanelAnimationStart}
         onAnimationComplete={handlePanelAnimationComplete}
         className="fixed right-4 bottom-20 left-4 z-50 md:left-auto"
@@ -142,9 +141,9 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
                 initial={{ opacity: 1 }}
                 animate={{ opacity: error === null ? 1 : 0 }}
                 transition={{
-                  type: 'linear',
+                  // Removed 'type: linear' to satisfy Webpack
                   duration: 0.2,
-                }}
+                } as any}
                 disabled={!popupOpen}
                 sessionStarted={popupOpen}
                 onEmbedError={setError}
