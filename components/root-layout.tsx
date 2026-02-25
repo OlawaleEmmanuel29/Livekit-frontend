@@ -17,7 +17,8 @@ interface RootLayoutProps {
   className?: string;
 }
 
-export default function RootLayout({ children, className }: RootLayoutProps) {
+// We use "export function" so that other files can find it by name
+export async function RootLayout({ children, className }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning className={cn('scroll-smooth', className)}>
       <body
@@ -31,3 +32,6 @@ export default function RootLayout({ children, className }: RootLayoutProps) {
     </html>
   );
 }
+
+// We also keep "export default" just in case Vercel prefers it
+export default RootLayout;
