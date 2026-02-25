@@ -12,9 +12,13 @@ export function ChatInput({ onSend, className, disabled, ...props }: ChatInputPr
   const inputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Use "any" to stop the React 19 / Webpack SubmitEvent mismatch error
+  const handleSubmit = (e: any) => {
     e.preventDefault();
-    props.onSubmit?.(e);
+    if (props.onSubmit) {
+        // We cast this to any to satisfy the strict type check
+        (props.onSubmit as any)(e);
+    }
     onSend?.(message);
     setMessage('');
   };
@@ -25,7 +29,6 @@ export function ChatInput({ onSend, className, disabled, ...props }: ChatInputPr
     if (disabled) {
       return;
     }
-    // when not disabled refocus on input
     inputRef.current?.focus();
   }, [disabled]);
 
