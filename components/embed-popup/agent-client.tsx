@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Room, RoomEvent } from 'livekit-client';
+import { Room, RoomEvent, DataPacket_Kind } from 'livekit-client'; // Added DataPacket_Kind
 import { motion } from 'framer-motion';
 import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
 import { ErrorMessage } from '@/components/embed-popup/error-message';
@@ -44,22 +44,43 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
     }
   };
 
+  // --- UPDATED EFFECT: Added the Open URL Listener ---
   useEffect(() => {
     const onDisconnected = () => {
       setPopupOpen(false);
       refreshConnectionDetails();
     };
+
     const onMediaDevicesError = (error: Error) => {
       setError({
         title: 'Encountered an error with your media devices',
         description: `${error.name}: ${error.message}`,
       });
     };
+
+    // THIS IS THE NEW PART: Listening for the signal from Python
+    const onDataReceived = (payload: Uint8Array) => {
+      const decoder = new TextDecoder();
+      try {
+        const data = JSON.parse(decoder.decode(payload));
+        if (data.action === 'open_url' && data.url) {
+          console.log("AI Agent is opening page:", data.url);
+          // Opens your WordPress page in a new tab
+          window.open(data.url, '_blank', 'noopener,noreferrer');
+        }
+      } catch (e) {
+        console.error("Error parsing data from Agent:", e);
+      }
+    };
+
     room.on(RoomEvent.MediaDevicesError, onMediaDevicesError);
     room.on(RoomEvent.Disconnected, onDisconnected);
+    room.on(RoomEvent.DataReceived, onDataReceived); // Start listening
+
     return () => {
       room.off(RoomEvent.Disconnected, onDisconnected);
       room.off(RoomEvent.MediaDevicesError, onMediaDevicesError);
+      room.off(RoomEvent.DataReceived, onDataReceived); // Stop listening
     };
   }, [room, refreshConnectionDetails]);
 
@@ -124,7 +145,6 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
           translateY: popupOpen ? 0 : 8,
         }}
         transition={{
-          // Removed 'type: spring' to satisfy Webpack
           bounce: 0,
           duration: popupOpen ? 1 : 0.2,
         } as any}
@@ -141,7 +161,6 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
                 initial={{ opacity: 1 }}
                 animate={{ opacity: error === null ? 1 : 0 }}
                 transition={{
-                  // Removed 'type: linear' to satisfy Webpack
                   duration: 0.2,
                 } as any}
                 disabled={!popupOpen}
