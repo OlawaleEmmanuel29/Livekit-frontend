@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Room, RoomEvent } from 'livekit-client';
+import { Room, RoomEvent, DataPacket_Kind } from 'livekit-client'; // Added DataPacket_Kind
 import { motion } from 'framer-motion';
 import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
 import { ErrorMessage } from '@/components/embed-popup/error-message';
@@ -23,6 +23,31 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
   const [error, setError] = useState<EmbedErrorDetails | null>(null);
   const { connectionDetails, refreshConnectionDetails, existingOrRefreshConnectionDetails } =
     useConnectionDetails(appConfig);
+
+  // --- START OF ADDED CODE FOR BROWSER NAVIGATION ---
+  useEffect(() => {
+    const handleDataReceived = (payload: Uint8Array) => {
+      try {
+        const decoder = new TextDecoder();
+        const strData = decoder.decode(payload);
+        const data = JSON.parse(strData);
+
+        // This checks if the message is the navigation command from your Python tool
+        if (data.action === 'open_browser' && data.url) {
+          console.log("AI requested navigation to:", data.url);
+          window.open(data.url, '_blank');
+        }
+      } catch (e) {
+        console.error("Failed to parse data message from AI:", e);
+      }
+    };
+
+    room.on(RoomEvent.DataReceived, handleDataReceived);
+    return () => {
+      room.off(RoomEvent.DataReceived, handleDataReceived);
+    };
+  }, [room]);
+  // --- END OF ADDED CODE ---
 
   const handleTogglePopup = () => {
     if (isAnimating.current) {
@@ -124,7 +149,6 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
           translateY: popupOpen ? 0 : 8,
         }}
         transition={{
-          // Removed 'type: spring' to satisfy Webpack
           bounce: 0,
           duration: popupOpen ? 1 : 0.2,
         } as any}
@@ -141,7 +165,6 @@ function AgentClient({ appConfig }: EmbedFixedAgentClientProps) {
                 initial={{ opacity: 1 }}
                 animate={{ opacity: error === null ? 1 : 0 }}
                 transition={{
-                  // Removed 'type: linear' to satisfy Webpack
                   duration: 0.2,
                 } as any}
                 disabled={!popupOpen}
